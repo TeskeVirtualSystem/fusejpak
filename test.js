@@ -1,2 +1,2 @@
-var fuse = require("./dist/fusejpak.min");
-var f = new fuse.FuseJPAK("packtest.jms","a");
+var fuse = require("./dist/fusejpak");
+var f = new fuse.FuseJPAK("00.jpak","a");

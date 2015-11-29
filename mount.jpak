@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# TODO: Better way
+nohup /usr/share/jpak/jpakmount "$@" 1>> /dev/null 2>>/dev/null &
