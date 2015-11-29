@@ -1,0 +1,8 @@
+#!/usr/bin/env nodejs
+
+var file = process.argv[2];
+var mountPoint = process.argv[3];
+console.log(process.argv);
+console.log("Mounting "+file+" to "+mountPoint);
+var fuse = require("./dist/fusejpak.min");
+new fuse.FuseJPAK(file,mountPoint);

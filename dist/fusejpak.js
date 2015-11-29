@@ -4858,12 +4858,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     return def.promise;
   };
 
-  Loader.prototype.getFileArrayBuffer = function(path, type) {
+  Loader.prototype.getFileArrayBuffer = function(path, type, offset, len) {
     var def = Q.defer();
 
     switch (this.jpakType) {
-      case "JPAK1": return this._p_jpak1_getFile(path, type);
-      case "JMS": return this._p_jms1_getFile(path, type);
+      case "JPAK1": return this._p_jpak1_getFile(path, type, offset, len);
+      case "JMS": return this._p_jms1_getFile(path, type, offset, len);
       default: def.reject("Not a valid jpak file!"); 
     }
 
@@ -4940,7 +4940,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
 
     return tableOffsetLoader.start().then(function(data) {
-      _this.fileTableOffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
+      _this.fileTableOffset = new DataView(data).getUint32(0, true);
       var fileTableLoader = new JPAK.Tools.DataLoader({
         url: _this.jpakfile,
         partial: true,
@@ -4963,16 +4963,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
   };
 
-  Loader.prototype._p_jpak1_getFile = function(path, type) {
+  Loader.prototype._p_jpak1_getFile = function(path, type, offset, len) {
     var def = Q.defer();
     var file = this.findFileEntry(path);
     type = type || 'application/octet-binary';
 
+    if (file === null || file === undefined)
+      def.reject("File does not exists!");
+
+    offset = offset || 0;
+    len = len || file.size;
+
     var fileLoader = new JPAK.Tools.DataLoader({
       url: this.jpakfile,
       partial: true,
-      partialFrom: file.offset,
-      partialTo: file.offset + file.size -1
+      partialFrom: file.offset + offset,
+      partialTo: file.offset + offset + len -1
     });
 
     fileLoader.start().then(function(data) {
@@ -5044,18 +5050,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
   };
 
-  Loader.prototype._p_jms1_getFile = function(path, type) {
+  Loader.prototype._p_jms1_getFile = function(path, type, offset, len) {
     var def = Q.defer();
     var file = this.findFileEntry(path);
     type = type || 'application/octet-binary';
+
+    offset = offset || 0;
+    len = len || file.size;
+
+    if (file === null || file === undefined)
+      def.reject("File does not exists!");
 
     if (file.volume in this.volumeTable) {
       var volumePath = this.volumeTable[file.volume].filename;
       var fileLoader = new JPAK.Tools.DataLoader({
         url: volumePath,
         partial: true,
-        partialFrom: file.offset,
-        partialTo: file.offset + file.size -1
+        partialFrom: file.offset + offset,
+        partialTo: file.offset + offset + len -1
       });
 
       fileLoader.start().then(function(data) {
